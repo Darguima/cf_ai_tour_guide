@@ -186,7 +186,7 @@ function setLocationMarker(lat, lng) {
 /**
  * Open the chat interface
  */
-function openChat(monumentId, monumentName) {
+async function openChat(monumentId, monumentName) {
 	currentMonument = {
 		id: monumentId,
 		name: monumentName,
@@ -203,6 +203,11 @@ function openChat(monumentId, monumentName) {
 	// Try to extract city from search context (would need to be enhanced)
 	const cityName = "Unknown City"; // In a real app, you'd track this better
 	document.getElementById("chat-city-name").textContent = cityName;
+
+	// Send initial template message
+	setTimeout(() => {
+		sendChatMessage("Hi, talk me about this monument.");
+	}, 300);
 
 	// Focus input
 	setTimeout(() => {
@@ -223,15 +228,19 @@ function closeChat() {
 /**
  * Send a chat message
  */
-async function sendChatMessage() {
+async function sendChatMessage(customMessage = null) {
 	const input = document.getElementById("chat-input");
-	const message = input.value.trim();
+	const message = customMessage || input.value.trim();
 
 	if (!message || !currentMonument) return;
 
 	// Add user message to UI
 	addMessageToUI(message, "user");
-	input.value = "";
+	
+	// Only clear input if it's a manual send (not a custom message)
+	if (!customMessage) {
+		input.value = "";
+	}
 
 	// Show loading indicator
 	showChatLoading(true);
