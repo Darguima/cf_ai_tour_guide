@@ -1,0 +1,49 @@
+/**
+ * Chat Service
+ * Handles chat endpoint and forwards requests to ChatDurableObject
+ */
+
+/**
+ * Handle chat requests and forward to ChatDurableObject
+ * @param request - The incoming request
+ * @param env - Environment with bindings
+ * @returns Response from ChatDurableObject
+ */
+export async function handleChat(request: Request, env: Env): Promise<Response> {
+	try {
+		const body = (await request.json()) as { doId: string };
+		const doId = body.doId;
+
+		if (!doId) {
+			return new Response(JSON.stringify({ error: "Missing doId parameter" }), {
+				status: 400,
+				headers: { "Content-Type": "application/json" },
+			});
+		}
+
+		// Get a stub to the ChatDurableObject using the provided ID
+		const stub = env.CHAT_DO.get(doId);
+
+		// Forward the request to the Durable Object
+		const chatResponse = await stub.fetch(
+			new Request(request.url, {
+				method: "POST",
+				body: JSON.stringify(await request.json()),
+				headers: { "Content-Type": "application/json" },
+			})
+		);
+
+		return chatResponse;
+	} catch (error) {
+		return new Response(
+			JSON.stringify({
+				success: false,
+				error: error instanceof Error ? error.message : "Unknown error",
+			}),
+			{
+				status: 500,
+				headers: { "Content-Type": "application/json" },
+			}
+		);
+	}
+}
