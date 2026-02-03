@@ -6,24 +6,38 @@
 // Global state
 let map;
 let currentMarkers = [];
+let locationMarker = null; // Blue marker for selected location
 let currentMonument = null;
 let chatHistory = [];
+let isLoadingMonuments = false;
+
+const defaultCities = [
+	{ name: "Paris, France", lat: 48.8566, lon: 2.3522 },
+	{ name: "London, UK", lat: 51.5074, lon: -0.1278 },
+	{ name: "Rome, Italy", lat: 41.9028, lon: 12.4964 },
+	{ name: "Berlin, Germany", lat: 52.5200, lon: 13.4050 },
+	{ name: "Madrid, Spain", lat: 40.4168, lon: -3.7038 },
+	{ name: "Vienna, Austria", lat: 48.2082, lon: 16.3738 },
+	{ name: "Prague, Czech Republic", lat: 50.0755, lon: 14.4378 },
+	{ name: "Amsterdam, Netherlands", lat: 52.3676, lon: 4.9041 },
+	{ name: "Lisbon, Portugal", lat: 38.7223, lon: -9.1393 },
+	{ name: "Athens, Greece", lat: 37.9838, lon: 23.7275 },
+]
+
+const defaultCity = defaultCities[0];
 
 /**
- * Wait for Leaflet to be loaded
+ * Populate the cities dropdown menu
  */
-function waitForLeaflet() {
-	return new Promise((resolve) => {
-		if (typeof L !== "undefined") {
-			resolve();
-		} else {
-			const checkLeaflet = setInterval(() => {
-				if (typeof L !== "undefined") {
-					clearInterval(checkLeaflet);
-					resolve();
-				}
-			}, 100);
-		}
+function populateCitiesDropdown() {
+	const select = document.getElementById("cities-select");
+	if (!select) return;
+
+	defaultCities.forEach((city) => {
+		const option = document.createElement("option");
+		option.value = `${city.lat},${city.lon}`;
+		option.textContent = city.name;
+		select.appendChild(option);
 	});
 }
 
@@ -31,31 +45,13 @@ function waitForLeaflet() {
  * Initialize the Leaflet map
  */
 function initializeMap() {
-	// Get the map container
-	const mapContainer = document.getElementById("map");
-	
-	if (!mapContainer) {
-		console.error("Map container #map not found in DOM");
-		return false;
-	}
-
-	// Default center (Paris)
-	const defaultLat = 48.8566;
-	const defaultLon = 2.3522;
-
 	try {
-		map = L.map("map").setView([defaultLat, defaultLon], 12);
+		map = L.map("map").setView([defaultCity.lat, defaultCity.lon], 14);
 
 		L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 			attribution: "&copy; OpenStreetMap contributors",
 			maxZoom: 19,
 		}).addTo(map);
-
-		// Handle map click for location selection
-		map.on("click", (event) => {
-			const { lat, lng } = event.latlng;
-			fetchAndDisplayMonuments(lat, lng);
-		});
 
 		console.log("Map initialized successfully");
 		return true;
@@ -69,22 +65,40 @@ function initializeMap() {
  * Fetch monuments from the API
  */
 async function fetchAndDisplayMonuments(lat, lng) {
+	if (isLoadingMonuments) return; // Prevent duplicate requests
+
 	try {
+		isLoadingMonuments = true;
 		clearMarkers();
+		setLocationMarker(lat, lng);
+		clearMapStatus();
+		showMapLoading(true);
 
 		const response = await fetch(`/api/monuments?lat=${lat}&lon=${lng}`);
+
+		if (!response.ok) {
+			throw new Error(`API error: ${response.status}`);
+		}
+
 		const data = await response.json();
 
-		if (!data.success || !data.monuments || data.monuments.length === 0) {
-			showStatus("No monuments found in this area. Try another location!");
+		if (!data.success) {
+			throw new Error(data.error || "Failed to fetch monuments");
+		}
+
+		if (!data.monuments || data.monuments.length === 0) {
+			showMapStatus("No monuments found in this area. Try another location!");
 			return;
 		}
 
 		displayMonuments(data.monuments);
-		showStatus(`Found ${data.monuments.length} monuments!`);
+		showMapStatus(`Found ${data.monuments.length} monuments!`);
 	} catch (error) {
 		console.error("Error fetching monuments:", error);
-		showStatus("Error fetching monuments. Please try again.");
+		showMapStatus(`Error: ${error.message || "Could not fetch monuments. Please try again."}`);
+	} finally {
+		isLoadingMonuments = false;
+		showMapLoading(false);
 	}
 }
 
@@ -93,7 +107,14 @@ async function fetchAndDisplayMonuments(lat, lng) {
  */
 function displayMonuments(monuments) {
 	monuments.forEach((monument) => {
-		const marker = L.marker([monument.lat, monument.lon], {
+		// Create red circle marker for monument
+		const marker = L.circleMarker([monument.lat, monument.lon], {
+			radius: 8,
+			fillColor: "#ff4444",
+			color: "#cc0000",
+			weight: 2,
+			opacity: 1,
+			fillOpacity: 0.7,
 			title: monument.tags.name,
 		}).addTo(map);
 
@@ -140,6 +161,26 @@ function displayMonuments(monuments) {
 function clearMarkers() {
 	currentMarkers.forEach((marker) => marker.remove());
 	currentMarkers = [];
+}
+
+/**
+ * Set or update the blue location marker
+ */
+function setLocationMarker(lat, lng) {
+	// Remove existing location marker if any
+	if (locationMarker) {
+		locationMarker.remove();
+	}
+
+	// Create blue circle marker for the selected location
+	locationMarker = L.circleMarker([lat, lng], {
+		radius: 12,
+		fillColor: "#4A90E2",
+		color: "#2E5C8A",
+		weight: 3,
+		opacity: 1,
+		fillOpacity: 0.5,
+	}).addTo(map);
 }
 
 /**
@@ -266,15 +307,41 @@ function showChatLoading(show) {
 }
 
 /**
- * Show status message
+ * Show/hide loading indicator for monuments
  */
-function showStatus(message) {
-	const messagesContainer = document.getElementById("chat-messages");
-	const statusDiv = document.createElement("div");
-	statusDiv.className = "status-message";
+function showMapLoading(show) {
+	const loadingDiv = document.getElementById("map-loading-indicator");
+	if (show) {
+		loadingDiv.classList.add("show");
+	} else {
+		loadingDiv.classList.remove("show");
+	}
+}
+
+/**
+ * Show status message on map
+ */
+function showMapStatus(message) {
+	clearMapStatus();
+	const statusDiv = document.getElementById("map-status-message");
 	statusDiv.textContent = message;
-	messagesContainer.appendChild(statusDiv);
-	setTimeout(() => statusDiv.remove(), 5000);
+	statusDiv.classList.add("show");
+
+	// Auto-remove after 5 seconds
+	setTimeout(() => {
+		if (statusDiv.classList.contains("show")) {
+			clearMapStatus();
+		}
+	}, 5000);
+}
+
+/**
+ * Clear map status messages
+ */
+function clearMapStatus() {
+	const statusDiv = document.getElementById("map-status-message");
+	statusDiv.classList.remove("show");
+	statusDiv.textContent = "";
 }
 
 /**
@@ -282,7 +349,7 @@ function showStatus(message) {
  */
 function getUserGeolocation() {
 	if (!navigator.geolocation) {
-		showStatus("Geolocation is not supported by your browser.");
+		showMapStatus("Geolocation is not supported by your browser.");
 		return;
 	}
 
@@ -296,22 +363,20 @@ function getUserGeolocation() {
 			const { latitude, longitude } = position.coords;
 			fetchAndDisplayMonuments(latitude, longitude);
 			map.setView([latitude, longitude], 14);
+			btn.textContent = originalText;
+			btn.disabled = false;
 		},
 		(error) => {
 			console.error("Geolocation error:", error);
-			showStatus("Could not get your location. Please allow location access or click on the map.");
+			showMapStatus("Could not get your location. Please allow location access or click on the map.");
+			btn.textContent = originalText;
+			btn.disabled = false;
 		},
 		{
 			timeout: 10000,
 			enableHighAccuracy: false,
 		}
 	);
-
-	// Reset button after 2 seconds
-	setTimeout(() => {
-		btn.textContent = originalText;
-		btn.disabled = false;
-	}, 2000);
 }
 
 /**
@@ -321,7 +386,7 @@ function navigateToCity(coords) {
 	if (!coords) return;
 
 	const [lat, lng] = coords.split(",").map(Number);
-	map.setView([lat, lng], 12);
+	map.setView([lat, lng], 14);
 	fetchAndDisplayMonuments(lat, lng);
 }
 
@@ -336,6 +401,12 @@ function setupEventListeners() {
 	document.getElementById("cities-select").addEventListener("change", (e) => {
 		navigateToCity(e.target.value);
 		e.target.value = ""; // Reset select
+	});
+
+	// Handle map click for location selection
+	map.on("click", (event) => {
+		const { lat, lng } = event.latlng;
+		fetchAndDisplayMonuments(lat, lng);
 	});
 
 	// Chat close button
@@ -360,9 +431,8 @@ function setupEventListeners() {
 async function initialize() {
 	console.log("Starting app initialization...");
 
-	// Wait for Leaflet to be available
-	await waitForLeaflet();
-	console.log("Leaflet loaded");
+	console.log("Populating cities dropdown...");
+	populateCitiesDropdown();
 
 	// Initialize map
 	const mapReady = initializeMap();
@@ -374,8 +444,8 @@ async function initialize() {
 	setupEventListeners();
 	console.log("Event listeners setup complete");
 
-	// Optional: Load initial city
-	fetchAndDisplayMonuments(48.8566, 2.3522);
+	// Load initial city
+	fetchAndDisplayMonuments(defaultCity.lat, defaultCity.lon);
 	console.log("Initial monuments loading...");
 }
 

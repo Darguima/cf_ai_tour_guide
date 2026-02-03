@@ -55,3 +55,11 @@ Based on that file, I need you to scaffold the full project code. Please provide
    - Function to handle marker click -> open Chat UI -> `fetch('/api/chat')` to talk to the Durable Object.
 
 Please generate these files now, ensuring strict adherence to Cloudflare Workers syntax (ES Modules).
+
+- - -
+
+# Improving website design
+
+Instead of this blue markers I want a red small circle on the monuments. I also want a a blue circle marker on the picked location (so the user location, selected city or select point of the map).
+
+I also want the page to be cleaner on monuments loading and when overpass API return an error.
