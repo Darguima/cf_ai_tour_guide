@@ -1,6 +1,9 @@
-import { ChatDurableObject } from "./ChatDO";
-import { fetchMonumentsFromOverpass, type Monument } from "./monuments";
-import { handleChat } from "./chat";
+import { handleMonuments } from "./handlers/handleMonuments";
+import { handleChat } from "./handlers/handleChat";
+
+import { ChatDurableObject } from "./DurableObjects/ChatDO";
+
+export { ChatDurableObject };
 
 /**
  * AI Tour Guide Worker
@@ -10,42 +13,14 @@ import { handleChat } from "./chat";
  * - /api/chat - Forward chat requests to ChatDurableObject
  */
 
-export { ChatDurableObject };
-
 export default {
-	async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+	async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
 		const url = new URL(request.url);
 		const pathname = url.pathname;
 
 		// Route: /api/monuments - Fetch monuments near coordinates
 		if (pathname === "/api/monuments" && request.method === "GET") {
-			const lat = url.searchParams.get("lat");
-			const lon = url.searchParams.get("lon");
-
-			if (!lat || !lon) {
-				return new Response(JSON.stringify({ error: "Missing lat or lon parameters" }), {
-					status: 400,
-					headers: { "Content-Type": "application/json" },
-				});
-			}
-
-			try {
-				const monuments: Monument[] = await fetchMonumentsFromOverpass(parseFloat(lat), parseFloat(lon));
-				return new Response(JSON.stringify({ success: true, monuments }), {
-					headers: { "Content-Type": "application/json" },
-				});
-			} catch (error) {
-				return new Response(
-					JSON.stringify({
-						success: false,
-						error: error instanceof Error ? error.message : "Unknown error",
-					}),
-					{
-						status: 500,
-						headers: { "Content-Type": "application/json" },
-					}
-				);
-			}
+			return await handleMonuments(request, env);
 		}
 
 		// Route: /api/chat - Forward to ChatDurableObject
