@@ -22,25 +22,25 @@
 			<div id="map-section">
 				<div id="location-controls">
 					<div class="control-group">
-					<button id="geolocation-btn" class="location-option">
-						<div class="option-icon">📍</div>
-						<div class="option-label">My Location</div>
-					</button>
-				</div>
-				<div class="control-group cities-group">
-					<div class="select-wrapper">
-						<div class="select-icon">🌍</div>
-						<select id="cities-select">
-							<option value="">Select City</option>
-						</select>
+						<button id="geolocation-btn" class="control-btn">
+							<div class="control-btn-icon">📍</div>
+							<div class="control-btn-label">My Location</div>
+						</button>
 					</div>
-				</div>
-				<div class="control-group">
-					<div class="click-map-note">
-						<div class="click-map-icon">🗺️</div>
-						<div class="click-map-label">Or click Map</div>
+					<div class="control-group cities-group">
+						<div class="select-wrapper">
+							<div class="control-btn-icon">🌍</div>
+							<select id="cities-select">
+								<option value="">Select City</option>
+							</select>
+						</div>
 					</div>
-			</div>
+					<div class="control-group">
+						<div class="info-box">
+							<div class="info-box-icon">🗺️</div>
+							<div class="info-box-label">Or click Map</div>
+						</div>
+					</div>
 				</div>
 				<div id="map">
 					<div id="map-loading-indicator">
@@ -62,12 +62,7 @@
 			</div>
 			<div id="chat-messages"></div>
 			<div class="chat-input-area">
-				<input
-					type="text"
-					id="chat-input"
-					placeholder="Ask about this monument..."
-					autocomplete="off"
-				/>
+				<input type="text" id="chat-input" placeholder="Ask about this monument..." autocomplete="off" />
 				<button id="send-btn">➤</button>
 			</div>
 		</div>

@@ -45,55 +45,40 @@ body {
 	min-width: 0;
 }
 
-.location-option {
+/* Shared control item styles */
+.control-btn,
+.info-box {
 	display: flex;
 	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	gap: 0.5rem;
 	padding: 0.75rem 1rem;
-	font-size: 0.9rem !important;
 	width: 100%;
 	min-height: 80px;
+	font-size: 0.95rem;
+	font-weight: 500;
 }
 
-.option-icon {
+.control-btn-icon,
+.info-box-icon {
 	font-size: 1.5rem;
 	line-height: 1;
 }
 
-.option-label {
+.control-btn-label,
+.info-box-label {
 	font-size: 0.85rem;
 	font-weight: 500;
 	white-space: nowrap;
 }
 
-.click-map-note {
-	display: flex;
-	flex-direction: column;
-	align-items: center;
-	justify-content: center;
-	gap: 0.5rem;
+.info-box {
 	color: #666;
-	font-size: 0.9rem;
 	border: 2px solid #e0e0e0;
 	border-radius: 6px;
-	padding: 0.75rem 1rem;
 	background: transparent;
 	cursor: default;
-	width: 100%;
-	min-height: 80px;
-}
-
-.click-map-icon {
-	font-size: 1.5rem;
-	line-height: 1;
-}
-
-.click-map-label {
-	font-size: 0.85rem;
-	font-weight: 500;
-	white-space: nowrap;
 }
 
 .cities-group {
@@ -118,11 +103,6 @@ body {
 .select-wrapper:hover {
 	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 	transform: translateY(-2px);
-}
-
-.select-icon {
-	font-size: 1.5rem;
-	line-height: 1;
 }
 
 #cities-select {
@@ -190,6 +170,7 @@ select:focus {
 	position: relative;
 }
 
+/* Chat Interface */
 #chat-interface {
 	position: fixed;
 	right: 1rem;
@@ -238,7 +219,6 @@ select:focus {
 
 .close-chat-btn {
 	background: rgba(255, 255, 255, 0.2);
-	border: none;
 	color: white;
 	width: 32px;
 	height: 32px;
@@ -250,6 +230,8 @@ select:focus {
 	font-size: 1.2rem;
 	padding: 0;
 	margin-left: auto;
+	border: none;
+	transition: background 0.2s;
 }
 
 .close-chat-btn:hover {
@@ -333,13 +315,9 @@ select:focus {
 }
 
 #send-btn {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-	color: white;
-	border: none;
 	width: 40px;
 	height: 40px;
 	border-radius: 6px;
-	cursor: pointer;
 	display: flex;
 	align-items: center;
 	justify-content: center;
@@ -348,26 +326,13 @@ select:focus {
 	flex-shrink: 0;
 }
 
-#send-btn:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-}
-
 #send-btn:disabled {
 	opacity: 0.5;
 	cursor: not-allowed;
 	transform: none;
 }
 
-.loading-indicator {
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
-	color: #999;
-	font-size: 0.85rem;
-	padding: 0.5rem;
-}
-
+/* Loading and Status Indicators */
 .spinner {
 	width: 16px;
 	height: 16px;
@@ -382,16 +347,6 @@ select:focus {
 	100% { transform: rotate(360deg); }
 }
 
-.status-message {
-	background: #f5f5f5;
-	padding: 0.75rem;
-	border-radius: 6px;
-	text-align: center;
-	color: #666;
-	font-size: 0.9rem;
-}
-
-/* Map Status and Loading Styles */
 #map-loading-indicator {
 	position: absolute;
 	top: 50%;
@@ -446,6 +401,7 @@ select:focus {
 	display: block;
 }
 
+/* Responsive Design */
 @media (max-width: 768px) {
 	#app-container {
 		flex-direction: column;
