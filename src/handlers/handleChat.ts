@@ -11,29 +11,30 @@
  */
 export async function handleChat(request: Request, env: Env): Promise<Response> {
 	try {
-		const body = (await request.json()) as { doId: string };
-		const doId = body.doId;
+		   const body = await request.json() as { doId?: string; [key: string]: any };
 
-		if (!doId) {
-			return new Response(JSON.stringify({ error: "Missing doId parameter" }), {
-				status: 400,
-				headers: { "Content-Type": "application/json" },
-			});
-		}
+		   const doName = body.doId;
 
-		// Get a stub to the ChatDurableObject using the provided ID
-		const stub = env.CHAT_DO.get(doId);
+		   if (!doName) {
+			   return new Response(JSON.stringify({ error: "Missing doId parameter" }), {
+				   status: 400,
+				   headers: { "Content-Type": "application/json" },
+			   });
+		   }
 
-		// Forward the request to the Durable Object
-		const chatResponse = await stub.fetch(
-			new Request(request.url, {
-				method: "POST",
-				body: JSON.stringify(await request.json()),
-				headers: { "Content-Type": "application/json" },
-			})
-		);
+		   // Get a stub to the ChatDurableObject using the provided name
+		   const stub = env.CHAT_DO.get(env.CHAT_DO.idFromName(doName));
 
-		return chatResponse;
+		   // Forward the request to the Durable Object
+		   const chatResponse = await stub.fetch(
+			   new Request(request.url, {
+				   method: "POST",
+				   body: JSON.stringify(body),
+				   headers: { "Content-Type": "application/json" },
+			   })
+		   );
+
+		   return chatResponse;
 	} catch (error) {
 		return new Response(
 			JSON.stringify({

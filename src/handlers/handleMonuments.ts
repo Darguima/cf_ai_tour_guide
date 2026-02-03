@@ -11,7 +11,7 @@ import { fetchMonumentsFromOverpass, type Monument } from "../overpassAPI/overpa
  * @param env - Environment with bindings
  * @returns Response with monuments data
  */
-export async function handleMonuments(request: Request, env: Env): Promise<Response> {
+export async function handleMonuments(request: Request, _env: Env): Promise<Response> {
   const url = new URL(request.url);
 
   const lat = url.searchParams.get("lat");
