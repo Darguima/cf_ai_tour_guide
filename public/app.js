@@ -11,6 +11,24 @@ let currentMonument = null;
 let chatHistory = [];
 let isLoadingMonuments = false;
 
+const sessionStorageKey = "ai-tour-guide-session-id";
+
+/**
+ * Get or create a stable session id for this browser
+ */
+function getSessionId() {
+	let sessionId = localStorage.getItem(sessionStorageKey);
+	if (!sessionId) {
+		if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+			sessionId = crypto.randomUUID();
+		} else {
+			sessionId = `session-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+		}
+		localStorage.setItem(sessionStorageKey, sessionId);
+	}
+	return sessionId;
+}
+
 const defaultCities = [
 	{ name: "Paris, France", lat: 48.8566, lon: 2.3522 },
 	{ name: "London, UK", lat: 51.5074, lon: -0.1278 },
@@ -250,7 +268,7 @@ async function sendChatMessage(customMessage = null) {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				doId: `monument-${currentMonument.id}`,
+				doId: `monument-${currentMonument.id}-session-${getSessionId()}`,
 				message,
 				context: {
 					monumentName: currentMonument.name,
