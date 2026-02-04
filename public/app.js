@@ -29,6 +29,13 @@ function getSessionId() {
 	return sessionId;
 }
 
+/**
+ * Build durable object id for the current monument + session
+ */
+function getChatDoId(monumentId) {
+	return `monument-${monumentId}-session-${getSessionId()}`;
+}
+
 const defaultCities = [
 	{ name: "Paris, France", lat: 48.8566, lon: 2.3522 },
 	{ name: "London, UK", lat: 51.5074, lon: -0.1278 },
@@ -222,10 +229,15 @@ async function openChat(monumentId, monumentName) {
 	const cityName = "Unknown City"; // In a real app, you'd track this better
 	document.getElementById("chat-city-name").textContent = cityName;
 
-	// Send initial template message
-	setTimeout(() => {
-		sendChatMessage("Hi, talk me about this monument.");
-	}, 300);
+	// Load previous conversation (if any)
+	const historyLoaded = await loadChatHistory();
+
+	if (!historyLoaded) {
+		// Send initial template message when no history exists
+		setTimeout(() => {
+			sendChatMessage("Hi, talk me about this monument.");
+		}, 300);
+	}
 
 	// Focus input
 	setTimeout(() => {
@@ -241,6 +253,49 @@ function closeChat() {
 	chatInterface.classList.remove("active");
 	currentMonument = null;
 	chatHistory = [];
+}
+
+/**
+ * Load previous chat history from the Durable Object
+ */
+async function loadChatHistory() {
+	if (!currentMonument) return false;
+
+	try {
+		const params = new URLSearchParams({
+			doId: getChatDoId(currentMonument.id),
+			monumentName: currentMonument.name,
+			city: document.getElementById("chat-city-name").textContent,
+		});
+
+		const response = await fetch(`/api/chat?${params.toString()}`, {
+			method: "GET",
+		});
+
+		if (!response.ok) {
+			return false;
+		}
+
+		const data = await response.json();
+		if (!data.success || !Array.isArray(data.messages)) {
+			return false;
+		}
+
+		if (data.messages.length === 0) {
+			return false;
+		}
+
+		data.messages.forEach((message) => {
+			if (message.role === "user" || message.role === "assistant") {
+				addMessageToUI(message.content, message.role);
+			}
+		});
+
+		return true;
+	} catch (error) {
+		console.error("Failed to load chat history:", error);
+		return false;
+	}
 }
 
 /**
@@ -268,7 +323,7 @@ async function sendChatMessage(customMessage = null) {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				doId: `monument-${currentMonument.id}-session-${getSessionId()}`,
+				doId: getChatDoId(currentMonument.id),
 				message,
 				context: {
 					monumentName: currentMonument.name,

@@ -24,7 +24,7 @@ export default {
 		}
 
 		// Route: /api/chat - Forward to ChatDurableObject
-		if (pathname === "/api/chat" && request.method === "POST") {
+		if (pathname === "/api/chat" && (request.method === "POST" || request.method === "GET")) {
 			return await handleChat(request, env);
 		}
 

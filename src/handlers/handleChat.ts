@@ -11,6 +11,21 @@
  */
 export async function handleChat(request: Request, env: Env): Promise<Response> {
 	try {
+		   if (request.method === "GET") {
+			   const url = new URL(request.url);
+			   const doName = url.searchParams.get("doId");
+
+			   if (!doName) {
+				   return new Response(JSON.stringify({ error: "Missing doId parameter" }), {
+					   status: 400,
+					   headers: { "Content-Type": "application/json" },
+				   });
+			   }
+
+			   const stub = env.CHAT_DO.get(env.CHAT_DO.idFromName(doName));
+			   return await stub.fetch(request);
+		   }
+
 		   const body = await request.json() as { doId?: string; [key: string]: any };
 
 		   const doName = body.doId;

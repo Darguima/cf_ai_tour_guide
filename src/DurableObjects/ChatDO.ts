@@ -64,11 +64,32 @@ export class ChatDurableObject extends DurableObject {
 	 * Handle chat messages and generate AI responses
 	 */
 	async fetch(request: Request): Promise<Response> {
-		if (request.method !== "POST") {
-			return new Response("Method not allowed", { status: 405 });
-		}
-
 		try {
+			if (request.method === "GET") {
+				const url = new URL(request.url);
+				const monumentName = url.searchParams.get("monumentName");
+				const city = url.searchParams.get("city");
+
+				if (!monumentName || !city) {
+					return new Response("Invalid request: missing monumentName or city", { status: 400 });
+				}
+
+				await this.ensureInitialized(monumentName, city);
+				const visibleMessages = this.conversationHistory.filter((message) => message.role !== "system");
+
+				return new Response(
+					JSON.stringify({
+						success: true,
+						messages: visibleMessages,
+					}),
+					{ headers: { "Content-Type": "application/json" } }
+				);
+			}
+
+			if (request.method !== "POST") {
+				return new Response("Method not allowed", { status: 405 });
+			}
+
 			const body: ChatRequest = await request.json();
 			const { message, context } = body;
 
