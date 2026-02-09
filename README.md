@@ -67,7 +67,9 @@ The application has three main components:
 
 ### 🎬 Demo
 
-[Add screenshots or video demo here]
+Check the following image demo or visit the [live deployment](https://ai-tour-guide.darguima.com/) to see the application in action.
+
+![Demo PNG](readme/demo.png)
 
 ### 🧩 Features
 
