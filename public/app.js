@@ -154,10 +154,10 @@ function displayMonuments(monuments) {
 				data-monument-id="${monument.id}"
 				data-monument-name="${monument.tags.name}"
 				data-city=""
-				style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+				style="background: var(--bg-gradient); 
 					color: white; border: none; padding: 6px 12px; 
 					border-radius: 4px; cursor: pointer; font-size: 13px; font-weight: 500;">
-				💬 Chat with Historian
+				💬 Chat with Tour Guide
 			</button>
 		`;
 
